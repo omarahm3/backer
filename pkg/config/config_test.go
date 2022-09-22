@@ -12,9 +12,54 @@ const (
 	tmp_location = "/tmp/config.yaml"
 )
 
-func TestLoadAllOptions(t *testing.T) {
-	err := createConfigFile(tmp_location)
+func TestLoadMultipleTransfers(t *testing.T) {
+	initialize(t)
+
+	content := `backer:
+  transfer:
+    - source: ./s_test
+      destination: ./d_test
+    - source: ./1
+      destination: ./2
+  exclude:
+    - log
+    - logs
+    - "*.log"
+    - "node_modules"
+  rsync_options:
+    - -avAXEWSlHh
+    - --no-compress
+    - --info=progress2`
+
+	writeToConfig(content)
+
+	actual, err := load(tmp_location)
 	assert.Equal(t, nil, err)
+
+	expected := &Config{
+		TransferList: []TransferItem{
+			{
+				Source:      "./s_test",
+				Destination: "./d_test",
+			},
+			{
+				Source:      "./1",
+				Destination: "./2",
+			},
+		},
+		Exclude:      []string{"log", "logs", "*.log", "node_modules"},
+		RsyncOptions: []string{"-avAXEWSlHh", "--no-compress", "--info=progress2"},
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Error("expected config does not match the actual")
+	}
+
+	clean()
+}
+
+func TestLoadAllOptions(t *testing.T) {
+	initialize(t)
 
 	content := `backer:
   source: ./s_test
@@ -29,7 +74,7 @@ func TestLoadAllOptions(t *testing.T) {
     - --no-compress
     - --info=progress2`
 
-	fillConfigFile(content)
+	writeToConfig(content)
 
 	actual, err := load(tmp_location)
 	assert.Equal(t, nil, err)
@@ -45,37 +90,35 @@ func TestLoadAllOptions(t *testing.T) {
 		t.Error("expected config does not match the actual")
 	}
 
-	clean(tmp_location)
+	clean()
 }
 
 func TestLoadEmptyConfig(t *testing.T) {
-	err := createConfigFile(tmp_location)
+	initialize(t)
+
+	_, err := load(tmp_location)
 	assert.Equal(t, nil, err)
 
-	_, err = load(tmp_location)
-	assert.Equal(t, nil, err)
-
-	clean(tmp_location)
+	clean()
 }
 
 func TestInvalidConfigFormat(t *testing.T) {
-	err := createConfigFile(tmp_location)
-	assert.Equal(t, nil, err)
+	initialize(t)
 
 	content := `backer:
   exclude:
     - *.log
     - node_modules`
 
-	fillConfigFile(content)
+	writeToConfig(content)
 
-	_, err = load(tmp_location)
+	_, err := load(tmp_location)
 	assert.Equal(t, ErrInvalidConfigFormat, err)
 
-	clean(tmp_location)
+	clean()
 }
 
-func fillConfigFile(c string) {
+func writeToConfig(c string) {
 	f, err := os.OpenFile(tmp_location, os.O_RDWR, 0755)
 	if err != nil {
 		panic(err)
@@ -88,8 +131,13 @@ func fillConfigFile(c string) {
 	}
 }
 
-func clean(f string) {
-	err := os.Remove(f)
+func initialize(t *testing.T) {
+	err := createConfigFile(tmp_location)
+	assert.Equal(t, nil, err)
+}
+
+func clean() {
+	err := os.Remove(tmp_location)
 	if err != nil {
 		panic(err)
 	}

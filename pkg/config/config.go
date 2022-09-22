@@ -19,12 +19,18 @@ var (
 	ErrConfigFileIsEmpty    = errors.New("config file is empty")
 )
 
+type TransferItem struct {
+	Source      string `mapstructure:"source"`
+	Destination string `mapstructure:"destination"`
+}
+
 type Config struct {
 	Source      string `mapstructure:"source"`
 	Destination string `mapstructure:"destination"`
 
-	RsyncOptions []string `mapstructure:"rsync_options"`
-	Exclude      []string `mapstructure:"exclude"`
+	TransferList []TransferItem `mapstructure:"transfer"`
+	RsyncOptions []string       `mapstructure:"rsync_options"`
+	Exclude      []string       `mapstructure:"exclude"`
 }
 
 const (
