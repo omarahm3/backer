@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -49,7 +48,7 @@ const (
 func Load() (*Config, error) {
 	err := createConfigFile(location())
 	if err != nil {
-		log.Printf("load:: error creating config file: %s", err.Error())
+		Log("load:: error creating config file: %s", err.Error())
 		return nil, ErrCouldNotCreateConfig
 	}
 	return load(location())
@@ -60,7 +59,7 @@ func load(l string) (*Config, error) {
 	config.AddDriver(yamlv3.Driver)
 	err := config.LoadFiles(l)
 	if err != nil {
-		log.Printf("config:: error loading config file: %s", err.Error())
+		Log("config:: error loading config file: %s", err.Error())
 		return nil, ErrInvalidConfigFormat
 	}
 
@@ -72,7 +71,7 @@ func load(l string) (*Config, error) {
 	var c *Config
 	err = config.BindStruct(config_key, &c)
 	if err != nil {
-		log.Printf("config:: error decoding config file: %s", err.Error())
+		Log("config:: error decoding config file: %s", err.Error())
 		return nil, ErrCouldNotDecodeConfig
 	}
 

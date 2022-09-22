@@ -2,7 +2,6 @@ package back
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 	"sync"
@@ -51,7 +50,7 @@ func (r *rsync) run() error {
 
 	for _, level := range r.transferLevels {
 		wg.Add(1)
-		log.Printf("running command: %q", strings.Join(level.command, " "))
+		config.Log(fmt.Sprintf("running command: %q", strings.Join(level.command, " ")))
 
 		go func(level *transferLevel) {
 			defer wg.Done()

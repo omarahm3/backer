@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -31,8 +30,8 @@ func Init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	log.Printf("received args: %q", strings.Join(args, ","))
-	log.Printf("received rsync options: %q", strings.Join(rsyncOptions, ","))
+	config.Log(fmt.Sprintf("received args: %q", strings.Join(args, ",")))
+	config.Log(fmt.Sprintf("received rsync options: %q", strings.Join(rsyncOptions, ",")))
 	c, err := config.Load()
 	check(err)
 	err = back.Sync(parseCli(args, cmd, c))
