@@ -1,7 +1,9 @@
 package back
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"sync"
@@ -45,25 +47,48 @@ func (r *rsync) build() {
 }
 
 func (r *rsync) run() error {
-	// TODO make sure to run each command on a go routine
 	var wg sync.WaitGroup
 
 	for _, level := range r.transferLevels {
 		wg.Add(1)
 		config.Log(fmt.Sprintf("running command: %q", strings.Join(level.command, " ")))
 
-		go func(level *transferLevel) {
+		cmd := exec.Command(level.command[0], level.command[1:]...)
+
+		go func(level *transferLevel, cmd *exec.Cmd) {
 			defer wg.Done()
-			cmd := exec.Command(level.command[0], level.command[1:]...)
-			out, _ := cmd.CombinedOutput()
 
-			fmt.Println(string(out))
-		}(level)
+			sout, _ := cmd.StdoutPipe()
+			go readStd(sout, level)
 
+			serr, _ := cmd.StderrPipe()
+			go readStd(serr, level)
+
+			err := cmd.Start()
+			if err != nil {
+				config.Log(fmt.Sprintf("run:: error occurred running command: %q", err.Error()))
+				return
+			}
+
+			err = cmd.Wait()
+			if err != nil {
+				config.Log(fmt.Sprintf("run:: error occurred running command: %q", err.Error()))
+				return
+			}
+
+		}(level, cmd)
 	}
 	wg.Wait()
 
 	return nil
+}
+
+func readStd(r io.ReadCloser, level *transferLevel) {
+	s := bufio.NewScanner(r)
+
+	for s.Scan() {
+		fmt.Printf("[%s ---> %s] > %s\n", level.source, level.destination, s.Text())
+	}
 }
 
 func createRsync(c *config.Config) *rsync {
