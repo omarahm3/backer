@@ -79,7 +79,6 @@ func createRsync(c *config.Config) *rsync {
 }
 
 func Sync(c *config.Config) error {
-	log.Printf("Syncing from %q to %q", c.Source, c.Destination)
 	r := createRsync(c)
 	r.build()
 	err := r.run()

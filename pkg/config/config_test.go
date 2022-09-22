@@ -12,7 +12,7 @@ const (
 	tmp_location = "/tmp/config.yaml"
 )
 
-func TestLoadMultipleTransfers(t *testing.T) {
+func TestLoadAllOptions(t *testing.T) {
 	initialize(t)
 
 	content := `backer:
@@ -47,41 +47,6 @@ func TestLoadMultipleTransfers(t *testing.T) {
 				Destination: "./2",
 			},
 		},
-		Exclude:      []string{"log", "logs", "*.log", "node_modules"},
-		RsyncOptions: []string{"-avAXEWSlHh", "--no-compress", "--info=progress2"},
-	}
-
-	if !reflect.DeepEqual(expected, actual) {
-		t.Error("expected config does not match the actual")
-	}
-
-	clean()
-}
-
-func TestLoadAllOptions(t *testing.T) {
-	initialize(t)
-
-	content := `backer:
-  source: ./s_test
-  destination: ./d_test
-  exclude:
-    - log
-    - logs
-    - "*.log"
-    - "node_modules"
-  rsync_options:
-    - -avAXEWSlHh
-    - --no-compress
-    - --info=progress2`
-
-	writeToConfig(content)
-
-	actual, err := load(tmp_location)
-	assert.Equal(t, nil, err)
-
-	expected := &Config{
-		Source:       "./s_test",
-		Destination:  "./d_test",
 		Exclude:      []string{"log", "logs", "*.log", "node_modules"},
 		RsyncOptions: []string{"-avAXEWSlHh", "--no-compress", "--info=progress2"},
 	}

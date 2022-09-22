@@ -25,9 +25,6 @@ type TransferItem struct {
 }
 
 type Config struct {
-	Source      string `mapstructure:"source"`
-	Destination string `mapstructure:"destination"`
-
 	TransferList []TransferItem `mapstructure:"transfer"`
 	RsyncOptions []string       `mapstructure:"rsync_options"`
 	Exclude      []string       `mapstructure:"exclude"`
