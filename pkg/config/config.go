@@ -16,13 +16,13 @@ var (
 	ErrInvalidConfigFormat  = errors.New("invalid config format")
 	ErrCouldNotDecodeConfig = errors.New("could not decode config file")
 	ErrCouldNotCreateConfig = errors.New("could not create config file")
+	ErrConfigFileIsEmpty    = errors.New("config file is empty")
 )
 
 type Config struct {
 	Source      string `mapstructure:"source"`
 	Destination string `mapstructure:"destination"`
 
-	// TODO rsync options need to have pre-options and post-options
 	RsyncOptions []string `mapstructure:"rsync_options"`
 	Exclude      []string `mapstructure:"exclude"`
 }
@@ -42,12 +42,17 @@ func Load() (*Config, error) {
 }
 
 func load(l string) (*Config, error) {
-	config.WithOptions(config.Readonly, config.EnableCache)
+	config.WithOptions(config.EnableCache)
 	config.AddDriver(yamlv3.Driver)
 	err := config.LoadFiles(l)
 	if err != nil {
 		log.Printf("config:: error loading config file: %s", err.Error())
 		return nil, ErrInvalidConfigFormat
+	}
+
+	exists := config.Get(config_key)
+	if exists == nil {
+		config.Set(config_key, struct{}{})
 	}
 
 	var c *Config
