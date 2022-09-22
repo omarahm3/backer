@@ -18,7 +18,6 @@ type transferLevel struct {
 type rsync struct {
 	conf           *config.Config
 	bin            string
-	command        []string
 	excludeList    []string
 	transferLevels []*transferLevel
 }
@@ -35,6 +34,7 @@ func (r *rsync) build() {
 	options := excludeList
 	options = append(options, r.conf.RsyncOptions...)
 
+	// build transfer levels
 	for _, level := range r.transferLevels {
 		var cmd []string
 		cmd = append(cmd, r.bin)
@@ -44,16 +44,21 @@ func (r *rsync) build() {
 	}
 }
 
-func (r *rsync) run() (string, error) {
-	log.Printf("running command: %q", strings.Join(r.command, " "))
+func (r *rsync) run() error {
+	// TODO make sure to run each command on a go routine
+	for _, level := range r.transferLevels {
+		log.Printf("running command: %q", strings.Join(level.command, " "))
 
-	cmd := exec.Command(r.command[0], r.command[1:]...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
+		cmd := exec.Command(level.command[0], level.command[1:]...)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(string(out))
 	}
 
-	return string(out), nil
+	return nil
 }
 
 func createRsync(c *config.Config) *rsync {
@@ -77,12 +82,10 @@ func Sync(c *config.Config) error {
 	log.Printf("Syncing from %q to %q", c.Source, c.Destination)
 	r := createRsync(c)
 	r.build()
-	out, err := r.run()
+	err := r.run()
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(out)
 
 	return nil
 }
