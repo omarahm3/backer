@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/omarahm3/backer/pkg/config"
 )
@@ -46,17 +47,22 @@ func (r *rsync) build() {
 
 func (r *rsync) run() error {
 	// TODO make sure to run each command on a go routine
+	var wg sync.WaitGroup
+
 	for _, level := range r.transferLevels {
+		wg.Add(1)
 		log.Printf("running command: %q", strings.Join(level.command, " "))
 
-		cmd := exec.Command(level.command[0], level.command[1:]...)
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			return err
-		}
+		go func(level *transferLevel) {
+			defer wg.Done()
+			cmd := exec.Command(level.command[0], level.command[1:]...)
+			out, _ := cmd.CombinedOutput()
 
-		fmt.Println(string(out))
+			fmt.Println(string(out))
+		}(level)
+
 	}
+	wg.Wait()
 
 	return nil
 }
