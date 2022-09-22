@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -24,7 +26,7 @@ type rsync struct {
 	transferLevels []*transferLevel
 }
 
-func (r *rsync) build() {
+func (r *rsync) build() error {
 	// build exclude list
 	excludeList := r.conf.Exclude
 	for i, v := range excludeList {
@@ -38,12 +40,28 @@ func (r *rsync) build() {
 
 	// build transfer levels
 	for _, level := range r.transferLevels {
+		sPath, err := processSourcePath(level.source)
+		if err != nil {
+			return err
+		}
+
+		level.source = sPath
+
+		dPath, err := processDestinationPath(level.destination)
+		if err != nil {
+			return err
+		}
+
+		level.destination = dPath
+
 		var cmd []string
 		cmd = append(cmd, r.bin)
 		cmd = append(cmd, options...)
 		cmd = append(cmd, level.source, level.destination)
 		level.command = cmd
 	}
+
+	return nil
 }
 
 func (r *rsync) run() error {
@@ -83,6 +101,39 @@ func (r *rsync) run() error {
 	return nil
 }
 
+func processDestinationPath(p string) (string, error) {
+	last := p[len(p)-1]
+	d := p
+
+	if last == '/' {
+		d = filepath.Dir(d)
+	}
+
+	d = filepath.Dir(d)
+	if !filepath.IsAbs(d) || !isValidPath(d) {
+		return "", fmt.Errorf("path %q is not valid", d)
+	}
+
+	return p, nil
+}
+
+func processSourcePath(p string) (string, error) {
+	if !filepath.IsAbs(p) || !isValidPath(p) {
+		return "", fmt.Errorf("path %q is not valid", p)
+	}
+
+	return p, nil
+}
+
+func isValidPath(p string) bool {
+	_, err := os.Stat(p)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
 func readStd(r io.ReadCloser, level *transferLevel) {
 	s := bufio.NewScanner(r)
 
@@ -110,8 +161,12 @@ func createRsync(c *config.Config) *rsync {
 
 func Sync(c *config.Config) error {
 	r := createRsync(c)
-	r.build()
-	err := r.run()
+	err := r.build()
+	if err != nil {
+		return err
+	}
+
+	err = r.run()
 	if err != nil {
 		return err
 	}
