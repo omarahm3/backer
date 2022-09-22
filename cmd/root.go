@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const errInvalidNumberOfArguments = "invalid number of arguments, please enter 2 arguments where first one is source and the next is destination"
+
 var (
 	rsyncOptions []string
 	rootCmd      = &cobra.Command{
@@ -38,19 +40,14 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 func parseCli(args []string, cmd *cobra.Command, c *config.Config) *config.Config {
-	source, destination := c.Source, c.Destination
-
-	if len(args) > 0 {
-		source = args[0]
-		args = args[1:]
+	if len(args) == 1 || len(args) > 2 {
+		fatalPrint(errInvalidNumberOfArguments)
 	}
 
-	if len(args) > 0 {
-		destination = args[0]
-		args = args[1:]
+	if len(args) == 2 {
+		c.ClearTransfers()
+		c.AddTransfer(args[0], args[1])
 	}
-
-	c.Source, c.Destination = source, destination
 
 	if rsyncOptions != nil {
 		c.RsyncOptions = rsyncOptions

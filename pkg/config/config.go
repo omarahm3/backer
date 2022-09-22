@@ -33,6 +33,17 @@ type Config struct {
 	Exclude      []string       `mapstructure:"exclude"`
 }
 
+func (c *Config) ClearTransfers() {
+	c.TransferList = []TransferItem{}
+}
+
+func (c *Config) AddTransfer(source, destination string) {
+	c.TransferList = append(c.TransferList, TransferItem{
+		Source:      source,
+		Destination: destination,
+	})
+}
+
 const (
 	config_location = ".config/backer/config.yaml"
 	config_key      = "backer"
