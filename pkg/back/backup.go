@@ -87,7 +87,7 @@ func readStd(r io.ReadCloser, level *transferLevel) {
 	s := bufio.NewScanner(r)
 
 	for s.Scan() {
-		fmt.Printf("[%s ---> %s] > %s\n", level.source, level.destination, s.Text())
+		fmt.Printf("[%s->%s] > %s\n", level.source, level.destination, s.Text())
 	}
 }
 
