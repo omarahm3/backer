@@ -7,4 +7,6 @@ sudo cp ./backer.* /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl start backer.service
 sudo systemctl start backer.timer
+sudo systemctl enable backer.service
+sudo systemctl enable backer.timer
 journalctl -S today -f -u backer.service
