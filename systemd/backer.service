@@ -1,0 +1,15 @@
+# vim: set ft=systemd:
+
+[Unit]
+Description=Backer routine backups
+Wants=backer.timer
+After=network.target
+
+[Service]
+Type=simple
+User=mrgeek
+Group=mrgeek
+ExecStart=/home/mrgeek/go/bin/backer
+
+[Install]
+WantedBy=multi-user.target

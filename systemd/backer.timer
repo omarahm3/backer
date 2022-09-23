@@ -1,0 +1,12 @@
+# vim: set ft=systemd:
+
+[Unit]
+Description=Backer routine backups
+Wants=backer.service
+
+[Timer]
+Unit=backer.service
+OnCalendar=Hourly
+
+[Install]
+WantedBy=multi-user.target

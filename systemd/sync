@@ -1,0 +1,10 @@
+#!/bin/bash
+# vim: set ft=bash:
+
+sudo rm /etc/systemd/system/backer.service /etc/systemd/system/backer.timer
+sudo systemctl daemon-reload
+sudo cp ./backer.* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start backer.service
+sudo systemctl start backer.timer
+journalctl -S today -f -u backer.service
